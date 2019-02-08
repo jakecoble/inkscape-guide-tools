@@ -28,12 +28,7 @@ import inkex
 import gettext
 _ = gettext.gettext
 import guidetools
-try:
-    from subprocess import Popen, PIPE
-except ImportError:
-    inkex.errormsg(_("Failed to import the subprocess module."))
-    inkex.errormsg("Python version is : " + str(inkex.sys.version_info))
-    exit(1)
+import simpletransform
 
 # To show debugging output or error messages, use: inkex.debug( _(str(string)) )
 
@@ -164,34 +159,14 @@ class addMarginGuides(inkex.Effect):
                 inkex.errormsg(_("Please select an object first"))
                 exit()
 
-            # query bounding box, upper left corner (?)
-            q = {'x': 0, 'y': 0, 'width': 0, 'height': 0}
-            for query in q.keys():
-                p = Popen(
-                    'inkscape --query-%s --query-id=%s "%s"' % (
-                        query,
-                        self.options.ids[0],
-                        self.args[-1],
-                    ),
-                    shell=True,
-                    stdout=PIPE,
-                    stderr=PIPE,
-                )
-                p.wait()
-                q[query] = p.stdout.read()
+            # get bounding box
+            obj_x1, obj_x2, obj_y1, obj_y2 = simpletransform.computeBBox([self.getElementById(id) for id in self.options.ids])
 
-            # get center of bounding box
-            obj_width = float(q['width'])
-            obj_height = float(q['height'])
-            obj_x = float(q['x']) + obj_width / 2
-            obj_y = (
-                canvas_height - float(q['y']) - obj_height) + obj_height / 2
-
-            # start position of guides (not sur why I need to add the last half width/height)
-            top_pos = obj_y - top_margin + obj_height / 2
-            right_pos = obj_x + obj_width - right_margin - obj_width / 2
-            bottom_pos = obj_y - obj_height + bottom_margin + obj_height / 2
-            left_pos = obj_x + left_margin - obj_width / 2
+            # start position of guides
+            top_pos = canvas_height - obj_y1 - top_margin
+            right_pos = obj_x2 - right_margin
+            bottom_pos = canvas_height - obj_y2 + bottom_margin
+            left_pos = obj_x1 + left_margin
 
             # Draw the four margin guides
             # TODO: only draw if not on border
