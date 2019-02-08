@@ -30,18 +30,20 @@ sys.path.append('C:\Program Files\Inkscape\share\extensions')
 
 import inkex
 
+
 class remove_guides(inkex.Effect):
+    def __init__(self):
 
-	def __init__(self):
+        # Call the base class constructor.
+        inkex.Effect.__init__(self)
 
-		# Call the base class constructor.
-		inkex.Effect.__init__(self)
+    def effect(self):
 
-	def effect(self):
+        # Find and delete guide node.
+        for node in self.document.xpath(
+                "//sodipodi:guide", namespaces=inkex.NSS):
+            node.getparent().remove(node)
 
-		# Find and delete guide node.
-		for node in self.document.xpath("//sodipodi:guide", namespaces=inkex.NSS):
-			node.getparent().remove(node)
 
 # Create effect instance.
 effect = remove_guides()
